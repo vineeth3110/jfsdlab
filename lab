@@ -1,0 +1,172 @@
+1. Maven Project Setup
+Create a Maven Project: Use your IDE to create a Maven project.
+Add Dependencies: Include the Hibernate, MySQL, and JPA dependencies in the pom.xml.
+xml
+Copy code
+<dependencies>
+    <dependency>
+        <groupId>org.hibernate</groupId>
+        <artifactId>hibernate-core</artifactId>
+        <version>6.2.0.Final</version>
+    </dependency>
+    <dependency>
+        <groupId>mysql</groupId>
+        <artifactId>mysql-connector-java</artifactId>
+        <version>8.0.33</version>
+    </dependency>
+    <dependency>
+        <groupId>javax.persistence</groupId>
+        <artifactId>javax.persistence-api</artifactId>
+        <version>2.2</version>
+    </dependency>
+</dependencies>
+2. Database Setup
+Create a database named labexam in MySQL.
+Hibernate will handle table creation, but ensure that the hibernate.hbm2ddl.auto property in hibernate.cfg.xml is set to update.
+3. Hibernate Configuration (hibernate.cfg.xml)
+Place this in the src/main/resources folder.
+
+xml
+Copy code
+<!DOCTYPE hibernate-configuration PUBLIC 
+        "-//Hibernate/Hibernate Configuration DTD 3.0//EN" 
+        "http://hibernate.sourceforge.net/hibernate-configuration-3.0.dtd">
+<hibernate-configuration>
+    <session-factory>
+        <property name="hibernate.connection.driver_class">com.mysql.cj.jdbc.Driver</property>
+        <property name="hibernate.connection.url">jdbc:mysql://localhost:3306/labexam</property>
+        <property name="hibernate.connection.username">root</property>
+        <property name="hibernate.connection.password">password</property>
+        <property name="hibernate.dialect">org.hibernate.dialect.MySQLDialect</property>
+        <property name="hibernate.hbm2ddl.auto">update</property>
+        <property name="show_sql">true</property>
+        <property name="format_sql">true</property>
+        <mapping class="com.klef.jfsd.exam.Vehicle"/>
+        <mapping class="com.klef.jfsd.exam.Car"/>
+        <mapping class="com.klef.jfsd.exam.Truck"/>
+    </session-factory>
+</hibernate-configuration>
+4. Entity Classes
+Vehicle (Base Class)
+package com.klef.jfsd.exam;
+
+import jakarta.persistence.*;
+
+@Entity
+@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
+public abstract class Vehicle {
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private int id;
+    private String name;
+    private String type;
+    private int maxSpeed;
+    private String color;
+
+    // Getters and Setters
+    public int getId() {
+        return id;
+    }
+    public void setId(int id) {
+        this.id = id;
+    }
+    public String getName() {
+        return name;
+    }
+    public void setName(String name) {
+        this.name = name;
+    }
+    public String getType() {
+        return type;
+    }
+    public void setType(String type) {
+        this.type = type;
+    }
+    public int getMaxSpeed() {
+        return maxSpeed;
+    }
+    public void setMaxSpeed(int maxSpeed) {
+        this.maxSpeed = maxSpeed;
+    }
+    public String getColor() {
+        return color;
+    }
+    public void setColor(String color) {
+        this.color = color;
+    }
+}
+Car (Subclass)
+package com.klef.jfsd.exam;
+
+import jakarta.persistence.Entity;
+
+@Entity
+public class Car extends Vehicle {
+    private int numberOfDoors;
+
+    // Getters and Setters
+    public int getNumberOfDoors() {
+        return numberOfDoors;
+    }
+    public void setNumberOfDoors(int numberOfDoors) {
+        this.numberOfDoors = numberOfDoors;
+    }
+}
+Truck (Subclass)
+package com.klef.jfsd.exam;
+
+import jakarta.persistence.Entity;
+
+@Entity
+public class Truck extends Vehicle {
+    private int loadCapacity;
+
+    // Getters and Setters
+    public int getLoadCapacity() {
+        return loadCapacity;
+    }
+    public void setLoadCapacity(int loadCapacity) {
+        this.loadCapacity = loadCapacity;
+    }
+}
+5. ClientDemo Class
+package com.klef.jfsd.exam;
+
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
+import org.hibernate.cfg.Configuration;
+
+public class ClientDemo {
+    public static void main(String[] args) {
+        SessionFactory sessionFactory = new Configuration().configure("hibernate.cfg.xml").buildSessionFactory();
+        Session session = sessionFactory.openSession();
+        Transaction transaction = session.beginTransaction();
+
+        // Create and persist Car object
+        Car car = new Car();
+        car.setName("Sedan");
+        car.setType("Car");
+        car.setMaxSpeed(200);
+        car.setColor("Red");
+        car.setNumberOfDoors(4);
+
+        // Create and persist Truck object
+        Truck truck = new Truck();
+        truck.setName("Freightliner");
+        truck.setType("Truck");
+        truck.setMaxSpeed(120);
+        truck.setColor("Blue");
+        truck.setLoadCapacity(5000);
+
+        // Save the objects
+        session.persist(car);
+        session.persist(truck);
+
+        transaction.commit();
+        session.close();
+        sessionFactory.close();
+
+        System.out.println("Records inserted successfully!");
+    }
+}
